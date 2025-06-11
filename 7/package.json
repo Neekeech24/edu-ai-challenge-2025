@@ -1,0 +1,23 @@
+{
+  "name": "seabattle",
+  "version": "1.0.0",
+  "description": "A modern implementation of the Sea Battle game",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --config=jest.config.js",
+    "coverage": "node run-coverage.js"
+  },
+  "keywords": [
+    "battleship",
+    "game",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
