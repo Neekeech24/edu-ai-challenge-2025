@@ -1,0 +1,64 @@
+# Validation Library Test Coverage Report
+
+## Overall Coverage
+- Statement Coverage: 86.79%
+- Branch Coverage: 85.71%
+- Function Coverage: 78%
+- Line Coverage: 87.5%
+
+## Coverage by Component
+
+### Array Validator (100% coverage)
+- All statements, branches, functions, and lines are covered
+- Validates array type checking and length validation
+- Tests array item validation with nested validators
+
+### Base Validator (100% coverage)
+- All statements, branches, functions, and lines are covered
+- Core validation functionality working as expected
+- Optional field handling and custom messages working correctly
+
+### Boolean Validator (100% coverage)
+- All statements, branches, functions, and lines are covered
+- Boolean type checking working correctly
+- Optional boolean handling implemented and tested
+
+### Number Validator (57.14% coverage)
+- Uncovered lines: 26-41 (positive, negative, and integer methods)
+- Basic number validation and range checking covered
+- Additional numeric validation methods need more tests
+
+### Object Validator (76% coverage)
+- Statement Coverage: 76%
+- Branch Coverage: 72.72%
+- Function Coverage: 57.14%
+- Line Coverage: 79.16%
+- Uncovered lines: 20, 32, 50-53 (strict mode and some error handling)
+- Core object validation working correctly
+- Nested object validation tested
+
+### Schema Builder (100% coverage)
+- All statements, branches, functions, and lines are covered
+- All validator factory methods working correctly
+
+### String Validator (84.61% coverage)
+- Statement Coverage: 84.61%
+- Function Coverage: 81.81%
+- Uncovered lines: 38-39 (nonEmpty method)
+- String type checking, length validation, and pattern matching covered
+- Email validation tested and working
+
+## Test Suite Summary
+- Total Test Suites: 1
+- Total Tests: 12
+- All tests passing
+- Test execution time: 1.671s
+
+## Areas for Improvement
+1. Add tests for Number Validator's positive(), negative(), and integer() methods
+2. Increase coverage of Object Validator's strict mode functionality
+3. Add tests for String Validator's nonEmpty() method
+4. Add more edge cases and boundary testing
+
+## Conclusion
+The validation library has good overall coverage with most core functionality well-tested. Some advanced features and edge cases need additional test coverage, but the library is stable and ready for basic use cases.
