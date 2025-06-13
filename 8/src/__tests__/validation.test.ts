@@ -20,6 +20,13 @@ describe('Validation Library', () => {
       expect(validator.validate('test@example.com').isValid).toBe(true);
       expect(validator.validate('invalid-email').isValid).toBe(false);
     });
+
+    it('should validate non-empty strings', () => {
+      const validator = Schema.string().nonEmpty();
+      expect(validator.validate('test').isValid).toBe(true);
+      expect(validator.validate('').isValid).toBe(false);
+      expect(validator.validate('  ').isValid).toBe(false);
+    });
   });
 
   describe('Number Validator', () => {
@@ -33,6 +40,41 @@ describe('Validation Library', () => {
       const validator = Schema.number().min(0).max(100);
       expect(validator.validate(50).isValid).toBe(true);
       expect(validator.validate(-1).isValid).toBe(false);
+      expect(validator.validate(101).isValid).toBe(false);
+    });
+
+    it('should validate positive numbers', () => {
+      const validator = Schema.number().positive();
+      expect(validator.validate(10).isValid).toBe(true);
+      expect(validator.validate(0).isValid).toBe(false);
+      expect(validator.validate(-10).isValid).toBe(false);
+    });
+
+    it('should validate negative numbers', () => {
+      const validator = Schema.number().negative();
+      expect(validator.validate(-10).isValid).toBe(true);
+      expect(validator.validate(0).isValid).toBe(false);
+      expect(validator.validate(10).isValid).toBe(false);
+    });
+
+    it('should validate integers', () => {
+      const validator = Schema.number().integer();
+      expect(validator.validate(42).isValid).toBe(true);
+      expect(validator.validate(42.5).isValid).toBe(false);
+      expect(validator.validate(-42).isValid).toBe(true);
+      expect(validator.validate(-42.5).isValid).toBe(false);
+    });
+
+    it('should combine multiple number validations', () => {
+      const validator = Schema.number()
+        .positive()
+        .integer()
+        .max(100)
+        .withMessage('Must be a positive integer less than or equal to 100');
+      
+      expect(validator.validate(50).isValid).toBe(true);
+      expect(validator.validate(-1).isValid).toBe(false);
+      expect(validator.validate(50.5).isValid).toBe(false);
       expect(validator.validate(101).isValid).toBe(false);
     });
   });
@@ -67,6 +109,12 @@ describe('Validation Library', () => {
       expect(validator.validate(['a', 'b']).isValid).toBe(true);
       expect(validator.validate(['a']).isValid).toBe(false);
       expect(validator.validate(['a', 'b', 'c', 'd']).isValid).toBe(false);
+    });
+
+    it('should validate nested arrays', () => {
+      const validator = Schema.array(Schema.array(Schema.number()));
+      expect(validator.validate([[1, 2], [3, 4]]).isValid).toBe(true);
+      expect(validator.validate([[1, '2'], [3, 4]]).isValid).toBe(false);
     });
   });
 
@@ -111,6 +159,52 @@ describe('Validation Library', () => {
         isActive: false
       };
       expect(userSchema.validate(userWithoutTags).isValid).toBe(true);
+    });
+
+    it('should validate nested objects', () => {
+      const addressSchema = Schema.object({
+        street: Schema.string(),
+        city: Schema.string(),
+        postalCode: Schema.string().pattern(/^\d{5}$/)
+      });
+
+      const userWithAddressSchema = Schema.object({
+        name: Schema.string(),
+        address: addressSchema
+      });
+
+      expect(userWithAddressSchema.validate({
+        name: 'John',
+        address: {
+          street: '123 Main St',
+          city: 'Anytown',
+          postalCode: '12345'
+        }
+      }).isValid).toBe(true);
+
+      expect(userWithAddressSchema.validate({
+        name: 'John',
+        address: {
+          street: '123 Main St',
+          city: 'Anytown',
+          postalCode: 'invalid'
+        }
+      }).isValid).toBe(false);
+    });
+
+    it('should enforce strict mode', () => {
+      const strictSchema = Schema.object({
+        name: Schema.string()
+      }).strict();
+
+      expect(strictSchema.validate({
+        name: 'John',
+        unknown: 'field'
+      }).isValid).toBe(false);
+
+      expect(strictSchema.validate({
+        name: 'John'
+      }).isValid).toBe(true);
     });
   });
 }); 

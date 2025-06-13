@@ -2,124 +2,203 @@
 
 A robust, type-safe validation library for complex data structures in TypeScript.
 
-## Features
-
-- Type-safe validation for primitive and complex types
-- Fluent API for building validation schemas
-- Comprehensive error messages
-- Support for optional fields
-- Extensible validation rules
-- Built with TypeScript for excellent type inference
-
 ## Installation
 
+1. Clone the repository:
 ```bash
-npm install validation-library
+git clone <repository-url>
+cd validation-library
 ```
 
-## Usage
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Build the library:
+```bash
+npm run build
+```
+
+## Running Tests
+
+Run the test suite:
+```bash
+npm test
+```
+
+Run tests with coverage:
+```bash
+npm run test:coverage
+```
+
+Watch mode for development:
+```bash
+npm run test:watch
+```
+
+## Usage Guide
+
+### 1. Basic Validation
 
 ```typescript
 import { Schema } from 'validation-library';
 
+// Create a string validator
+const nameValidator = Schema.string()
+  .minLength(2)
+  .maxLength(50)
+  .withMessage('Name must be between 2 and 50 characters');
+
+// Validate a value
+const result = nameValidator.validate('John');
+console.log(result.isValid); // true
+```
+
+### 2. Complex Object Validation
+
+```typescript
 // Define a schema for a user object
 const userSchema = Schema.object({
   name: Schema.string().minLength(2).maxLength(50),
   email: Schema.string().email(),
-  age: Schema.number().min(0).optional(),
-  tags: Schema.array(Schema.string()),
-  address: Schema.object({
-    street: Schema.string(),
-    city: Schema.string(),
-    postalCode: Schema.string().pattern(/^\d{5}$/)
-  }).optional()
+  age: Schema.number().min(0).max(150).optional(),
+  roles: Schema.array(Schema.string())
 });
 
-// Validate data
-const userData = {
-  name: "John Doe",
-  email: "john@example.com",
+// Validate an object
+const user = {
+  name: 'John Doe',
+  email: 'john@example.com',
   age: 30,
-  tags: ["developer", "designer"],
-  address: {
-    street: "123 Main St",
-    city: "Anytown",
-    postalCode: "12345"
-  }
+  roles: ['admin', 'user']
 };
 
-const result = userSchema.validate(userData);
+const result = userSchema.validate(user);
 console.log(result.isValid); // true
 console.log(result.errors);  // []
-
-// Invalid data example
-const invalidData = {
-  name: "J", // too short
-  email: "invalid-email",
-  age: -1,
-  tags: ["developer", 123], // invalid tag type
-  address: {
-    street: "123 Main St",
-    city: "Anytown",
-    postalCode: "invalid" // doesn't match pattern
-  }
-};
-
-const invalidResult = userSchema.validate(invalidData);
-console.log(invalidResult.isValid); // false
-console.log(invalidResult.errors);
-// [
-//   "Field 'name': String must be at least 2 characters long",
-//   "Field 'email': Invalid email address",
-//   "Field 'age': Number must be greater than or equal to 0",
-//   "Field 'tags[1]': Value must be a string",
-//   "Field 'address.postalCode': String must match pattern /^\d{5}$/"
-// ]
 ```
 
-## API Reference
+### 3. Nested Object Validation
 
-### Schema
+```typescript
+const addressSchema = Schema.object({
+  street: Schema.string(),
+  city: Schema.string(),
+  postalCode: Schema.string().pattern(/^\d{5}$/)
+});
 
-The main entry point for creating validators.
+const userWithAddressSchema = Schema.object({
+  name: Schema.string(),
+  address: addressSchema
+});
+```
 
-#### String Validator
+### 4. Optional Fields
 
+```typescript
+const schema = Schema.object({
+  requiredField: Schema.string(),
+  optionalField: Schema.number().optional()
+});
+```
+
+### 5. Custom Validation Messages
+
+```typescript
+const ageValidator = Schema.number()
+  .min(18)
+  .withMessage('Must be at least 18 years old')
+  .max(100)
+  .withMessage('Must be under 100 years old');
+```
+
+## Available Validators
+
+### String Validator
 - `string()`: Creates a string validator
 - `minLength(n)`: Sets minimum length
 - `maxLength(n)`: Sets maximum length
 - `email()`: Validates email format
 - `pattern(regex)`: Validates against a regular expression
+- `nonEmpty()`: Ensures string is not empty
 
-#### Number Validator
-
+### Number Validator
 - `number()`: Creates a number validator
 - `min(n)`: Sets minimum value
 - `max(n)`: Sets maximum value
-- `integer()`: Requires an integer
 - `positive()`: Requires a positive number
+- `negative()`: Requires a negative number
+- `integer()`: Requires an integer
 
-#### Array Validator
+### Boolean Validator
+- `boolean()`: Creates a boolean validator
 
+### Array Validator
 - `array(itemValidator)`: Creates an array validator
 - `minLength(n)`: Sets minimum array length
 - `maxLength(n)`: Sets maximum array length
 
-#### Object Validator
-
+### Object Validator
 - `object(schema)`: Creates an object validator
 - `strict()`: Disallows unknown properties
 
-### Common Methods
-
+## Common Methods
 All validators support:
-
 - `optional()`: Makes the field optional
 - `withMessage(msg)`: Customizes the error message
 
+## Error Handling
+
+The validation result includes detailed error messages:
+```typescript
+const result = userSchema.validate(invalidUser);
+if (!result.isValid) {
+  console.log('Validation errors:', result.errors);
+  // Example output:
+  // [
+  //   "Field 'name': String must be at least 2 characters long",
+  //   "Field 'email': Invalid email address"
+  // ]
+}
+```
+
+## Type Safety
+
+The library is built with TypeScript and provides full type safety:
+```typescript
+// TypeScript will catch type errors at compile time
+const schema = Schema.object({
+  name: Schema.string(),
+  age: Schema.number()
+});
+
+// TypeScript error: type 'string' is not assignable to type 'number'
+const invalid = {
+  name: "John",
+  age: "30" // Error!
+};
+```
+
+## Development
+
+1. Watch mode for TypeScript compilation:
+```bash
+npm run build:watch
+```
+
+2. Run tests in watch mode:
+```bash
+npm run test:watch
+```
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Fork the repository
+2. Create your feature branch
+3. Make your changes
+4. Run the tests
+5. Submit a pull request
 
 ## License
 
