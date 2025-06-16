@@ -1,0 +1,20 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Generated reports
+*.md
+!README.md
+!sample_outputs.md
+
+# Misc
+.DS_Store 
