@@ -12,62 +12,37 @@ def load_products(file_path):
         return json.load(f)
 
 def get_openai_function():
-    """Define the OpenAI function for product filtering."""
+    """Define the OpenAI function for displaying filtered products."""
     return {
-        "name": "filter_products",
-        "description": "Filter products based on user preferences",
+        "name": "display_filtered_products",
+        "description": "Displays a list of products to the user that match their filtering criteria from a provided list.",
         "parameters": {
             "type": "object",
             "properties": {
-                "category": {
-                    "type": "string",
-                    "enum": ["Electronics", "Fitness", "Kitchen", "Books", "Clothing"],
-                    "description": "Product category"
-                },
-                "min_price": {
-                    "type": "number",
-                    "description": "Minimum price (for 'over X' queries)"
-                },
-                "max_price": {
-                    "type": "number",
-                    "description": "Maximum price (for 'under X' queries)"
-                },
-                "min_rating": {
-                    "type": "number",
-                    "description": "Minimum rating (1-5)"
-                },
-                "show_in_stock": {
-                    "type": "boolean",
-                    "description": "True to show only in-stock items, False to show only out-of-stock items"
+                "filtered_products": {
+                    "type": "array",
+                    "description": "The list of products that match the user's query.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "number"},
+                            "name": {"type": "string"},
+                            "category": {"type": "string"},
+                            "price": {"type": "number"},
+                            "rating": {"type": "number"},
+                            "in_stock": {"type": "boolean"}
+                        },
+                        "required": ["id", "name", "category", "price", "rating", "in_stock"]
+                    }
                 }
-            }
+            },
+            "required": ["filtered_products"]
         }
     }
 
-def filter_products(products, filters):
-    """Filter products based on the criteria."""
-    filtered = products.copy()
-    
-    if 'category' in filters:
-        filtered = [p for p in filtered if p['category'] == filters['category']]
-    
-    if 'min_price' in filters:
-        filtered = [p for p in filtered if p['price'] > filters['min_price']]
-        
-    if 'max_price' in filters:
-        filtered = [p for p in filtered if p['price'] < filters['max_price']]
-    
-    if 'min_rating' in filters:
-        filtered = [p for p in filtered if p['rating'] >= filters['min_rating']]
-    
-    if 'show_in_stock' in filters:
-        filtered = [p for p in filtered if p['in_stock'] == filters['show_in_stock']]
-    
-    return filtered
-
 def format_product(product):
     """Format a product for display."""
-    return f"{product['name']} - ${product['price']:.2f}, Rating: {product['rating']}, {'In Stock' if product['in_stock'] else 'Out of Stock'}"
+    return f"{product.get('name', 'N/A')} - ${product.get('price', 0):.2f}, Rating: {product.get('rating', 'N/A')}, {'In Stock' if product.get('in_stock', False) else 'Out of Stock'}"
 
 def main():
     # Check for OpenAI API key
@@ -104,28 +79,41 @@ def main():
             break
 
         try:
+            products_json_string = json.dumps(products)
+            system_message = (
+                "You are a helpful shopping assistant. Your task is to filter a list of products based on the user's preferences. "
+                "You will be given a JSON object containing a list of all available products in the user message. "
+                "You must analyze the user's query, filter the provided product list, and then use the 'display_filtered_products' function "
+                "to return ONLY the products that exactly match the user's criteria. "
+                "The 'filtered_products' parameter of the function must be a list of product objects from the original list. "
+                "Do not invent products or modify them. Only return a subset of the original list."
+            )
+            
+            user_message = f"Please filter the following products based on my request.\n\nProduct List:\n{products_json_string}\n\nUser Request: '{user_input}'"
+
             # Call OpenAI API to process the natural language query
             response = client.chat.completions.create(
                 model="gpt-4.1-mini",
                 messages=[
-                    {"role": "system", "content": "You are a helpful shopping assistant that helps filter products based on user preferences."},
-                    {"role": "user", "content": user_input}
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": user_message}
                 ],
                 tools=[{
                     "type": "function",
                     "function": get_openai_function()
                 }],
-                tool_choice={"type": "function", "function": {"name": "filter_products"}},
-                temperature=0.7,
-                max_tokens=2000
+                tool_choice={"type": "function", "function": {"name": "display_filtered_products"}},
+                temperature=0.1,
             )
 
             # Extract the function arguments
-            function_args = json.loads(response.choices[0].message.tool_calls[0].function.arguments)
+            tool_call = response.choices[0].message.tool_calls[0]
+            if tool_call.function.name == "display_filtered_products":
+                function_args = json.loads(tool_call.function.arguments)
+                filtered_products = function_args.get("filtered_products", [])
+            else:
+                filtered_products = []
             
-            # Filter products
-            filtered_products = filter_products(products, function_args)
-
             # Display results
             print("\nFiltered Products:")
             if filtered_products:
